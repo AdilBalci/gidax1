@@ -23,7 +23,7 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .tab span{display:block;font-size:1.3rem;margin-bottom:4px}
 .section{display:none}.section.active{display:block}
 .upload{border:2px dashed var(--border);border-radius:16px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s}
-.upload:hover{border-color:var(--primary);background:rgba(99,102,241,0.05)}
+.upload:hover{border-color:var(--primary)}
 .upload.has-img{padding:0;border-style:solid}
 .upload .icon{font-size:3rem;margin-bottom:8px}
 .upload .text{color:var(--muted);font-size:0.9rem}
@@ -32,7 +32,6 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .upload.has-img .icon,.upload.has-img .text{display:none}
 .scanner-box{background:#000;border-radius:16px;overflow:hidden;position:relative;margin-bottom:12px}
 #reader{width:100%;min-height:280px}
-#reader video{border-radius:16px}
 .scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .scan-frame{width:200px;height:100px;border:3px solid var(--primary);border-radius:8px;position:relative}
 .scan-frame::before{content:'';position:absolute;left:10%;right:10%;height:2px;background:var(--success);animation:scan 2s ease-in-out infinite}
@@ -89,15 +88,21 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
 .grid-item{background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 8px;text-align:center}
 .grid-item .icon{font-size:1.2rem;margin-bottom:4px}
-.grid-item .value{font-size:0.8rem;font-weight:700}
+.grid-item .value{font-size:0.75rem;font-weight:700}
 .grid-item .value.success{color:var(--success)}
 .grid-item .value.warning{color:var(--warning)}
 .grid-item .value.danger{color:var(--danger)}
-.grid-item .label{font-size:0.6rem;color:var(--muted);margin-top:2px}
-.ing-title{font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.grid-item .label{font-size:0.55rem;color:var(--muted);margin-top:2px}
+.nutri-table{margin-bottom:16px}
+.nutri-table-title{font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.nutri-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem}
+.nutri-row:last-child{border-bottom:none}
+.nutri-row .label{color:var(--muted)}
+.nutri-row .value{font-weight:600}
+.ing-title{font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .ing{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .ing:last-child{border-bottom:none}
-.ing-dot{width:10px;height:10px;border-radius:50%}
+.ing-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .ing-dot.low{background:var(--success)}
 .ing-dot.medium{background:var(--warning)}
 .ing-dot.high{background:var(--danger)}
@@ -115,7 +120,6 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,23,0.95);backdr
 .list-header h2{font-size:1.1rem;font-weight:700}
 .list-header button{background:none;border:none;color:var(--danger);font-size:0.8rem;cursor:pointer}
 .list-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:12px;margin-bottom:8px;cursor:pointer}
-.list-item:hover{background:rgba(255,255,255,0.05)}
 .list-item .thumb{width:44px;height:44px;border-radius:10px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
 .list-item .info{flex:1}
 .list-item .name{font-weight:600;font-size:0.85rem}
@@ -133,9 +137,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,23,0.95);backdr
 .modal-close{background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer}
 .option-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .option{display:flex;align-items:center;gap:8px;padding:12px;background:rgba(255,255,255,0.03);border:2px solid transparent;border-radius:10px;cursor:pointer;font-size:0.8rem}
-.option:hover{background:rgba(255,255,255,0.05)}
 .option.selected{border-color:var(--primary);background:rgba(99,102,241,0.1)}
-.option .oicon{font-size:1.2rem}
   </style>
 </head>
 <body>
@@ -202,15 +204,15 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,23,0.95);backdr
         <div class="product-header">
           <img class="product-img" id="resultImg" alt="">
           <div class="product-info">
-            <div class="product-brand" id="resultBrand">-</div>
-            <div class="product-name" id="resultName">-</div>
-            <div class="product-cat" id="resultCat">-</div>
+            <div class="product-brand" id="resultBrand"></div>
+            <div class="product-name" id="resultName"></div>
+            <div class="product-cat" id="resultCat"></div>
           </div>
           <button class="fav-btn" id="favBtn" onclick="App.toggleFav()">🤍</button>
         </div>
         <div class="score-row">
           <div class="score-box"><div class="score-label">Sağlık Skoru</div><div class="score-value" id="scoreValue">-</div></div>
-          <div class="score-box" id="nutriBox" style="display:none"><div class="score-label">Nutri-Score</div><div class="nutri" id="nutriValue">-</div></div>
+          <div class="score-box" id="nutriBox"><div class="score-label">Nutri-Score</div><div class="nutri" id="nutriValue">-</div></div>
         </div>
         <div class="grid">
           <div class="grid-item"><div class="icon">🍬</div><div class="value" id="sugar">-</div><div class="label">Şeker</div></div>
@@ -218,7 +220,11 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,23,0.95);backdr
           <div class="grid-item"><div class="icon">🧂</div><div class="value" id="salt">-</div><div class="label">Tuz</div></div>
           <div class="grid-item"><div class="icon">⚗️</div><div class="value" id="additive">-</div><div class="label">Katkı</div></div>
         </div>
-        <div class="ing-title">İçerikler</div>
+        <div class="nutri-table" id="nutriTable">
+          <div class="nutri-table-title">📊 100g Başına Besin Değerleri</div>
+          <div id="nutriRows"></div>
+        </div>
+        <div class="ing-title">🧪 İçerik Analizi</div>
         <div id="ingredients"></div>
       </div>
       <button class="btn secondary" onclick="App.share()">📤 Paylaş</button>
@@ -259,7 +265,7 @@ const App={
     this.$('barcodeInput').onkeypress=e=>e.key==='Enter'&&this.searchBarcode();
     document.querySelectorAll('.option').forEach(o=>{o.onclick=()=>o.classList.toggle('selected')});
     this.loadProfileToModal();
-    if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js').catch(console.error)}
+    if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}
   },
   loadImage(file){const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const max=1200;let w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=h*max/w;w=max}else{w=w*max/h;h=max}}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);this.imageData=canvas.toDataURL('image/jpeg',0.8);this.$('preview').src=this.imageData;this.$('uploadArea').classList.add('has-img');this.$('analyzeBtn').disabled=false};img.src=e.target.result};reader.readAsDataURL(file)},
   async startScanner(){if(this.scanning)return;try{this.scanner=new Html5Qrcode('reader');await this.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:100}},code=>this.onScan(code),()=>{});this.scanning=true}catch(e){this.toast('Kamera açılamadı')}},
@@ -270,32 +276,79 @@ const App={
   async analyze(){if(!this.imageData)return;const btn=this.$('analyzeBtn');btn.classList.add('loading');btn.disabled=true;this.$('results').classList.remove('show');try{const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:this.imageData,profile:this.profile})});const data=await res.json();if(data.error)throw new Error(data.error);this.currentResult=data;this.render(data);this.addToHistory(data)}catch(e){this.toast(e.message)}finally{btn.classList.remove('loading');btn.disabled=false}},
   async analyzeBarcode(){if(!this.barcode)return;const btn=this.$('scanBtn');btn.classList.add('loading');btn.disabled=true;try{const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({barcode:this.barcode,profile:this.profile})});const data=await res.json();if(data.error)throw new Error(data.error);this.currentResult=data;this.render(data);this.addToHistory(data);this.stopScanner()}catch(e){this.toast(e.message)}finally{btn.classList.remove('loading');btn.disabled=false}},
   render(d){
+    // Alerts
     const alerts=d.sensitivityAlerts||[];
     this.$('alertsContainer').innerHTML=alerts.map(a=>`<div class="alert ${a.severity}"><div class="alert-icon">${a.icon}</div><div class="alert-content"><div class="alert-title">${a.title}</div><div class="alert-text">${a.message}</div></div></div>`).join('');
+    
+    // Product info
     this.$('resultImg').src=d.image||this.imageData||'';
-    this.$('resultBrand').textContent=d.brand||'-';
-    this.$('resultName').textContent=d.product||'-';
-    this.$('resultCat').textContent=d.category||'-';
-    const s=d.healthScore||0;const cls=s>=70?'high':s>=40?'medium':'low';
-    this.$('scoreValue').textContent=s;this.$('scoreValue').className='score-value '+cls;
-    if(['A','B','C','D','E'].includes(d.nutriScore)){this.$('nutriBox').style.display='block';this.$('nutriValue').textContent=d.nutriScore;this.$('nutriValue').className='nutri '+d.nutriScore}else{this.$('nutriBox').style.display='none'}
-    this.setLevel('sugar',d.sugarLevel);this.setLevel('fat',d.fatLevel);this.setLevel('salt',d.saltLevel);this.setLevel('additive',d.additiveLevel);
-    this.$('ingredients').innerHTML=(d.ingredients||[]).map(i=>`<div class="ing"><div class="ing-dot ${i.level}"></div><div class="ing-name">${i.name}${i.code?`<span class="ing-code">${i.code}</span>`:''}</div><div class="ing-risk" style="color:var(--${i.level==='high'?'danger':i.level==='medium'?'warning':'success'})">${i.risk}%</div></div>`).join('');
-    const isFav=this.favorites.some(f=>f.product===d.product);this.$('favBtn').textContent=isFav?'❤️':'🤍';this.$('favBtn').classList.toggle('active',isFav);
-    this.$('results').classList.add('show');this.$('results').scrollIntoView({behavior:'smooth'})
+    this.$('resultBrand').textContent=d.brand||'Marka Belirtilmemiş';
+    this.$('resultName').textContent=d.product||'Ürün';
+    this.$('resultCat').textContent=d.category||'Gıda';
+    
+    // Scores
+    const s=d.healthScore||50;
+    const cls=s>=70?'high':s>=40?'medium':'low';
+    this.$('scoreValue').textContent=s;
+    this.$('scoreValue').className='score-value '+cls;
+    
+    // Nutri-Score
+    if(['A','B','C','D','E'].includes(d.nutriScore)){
+      this.$('nutriBox').style.display='block';
+      this.$('nutriValue').textContent=d.nutriScore;
+      this.$('nutriValue').className='nutri '+d.nutriScore;
+    }else{
+      this.$('nutriBox').style.display='none';
+    }
+    
+    // Level indicators
+    this.setLevel('sugar',d.sugarLevel);
+    this.setLevel('fat',d.fatLevel);
+    this.setLevel('salt',d.saltLevel);
+    this.setLevel('additive',d.additiveLevel);
+    
+    // Nutrition table
+    const n=d.nutrients||{};
+    const nutriLabels={energy:'Enerji',protein:'Protein',carbs:'Karbonhidrat',sugar:'Şeker',fat:'Yağ',saturatedFat:'Doymuş Yağ',fiber:'Lif',salt:'Tuz'};
+    let nutriHtml='';
+    for(const[key,label]of Object.entries(nutriLabels)){
+      if(n[key]){nutriHtml+=`<div class="nutri-row"><span class="label">${label}</span><span class="value">${n[key]}</span></div>`;}
+    }
+    this.$('nutriRows').innerHTML=nutriHtml||'<div class="nutri-row"><span class="label">Besin değerleri mevcut değil</span></div>';
+    
+    // Ingredients
+    const ings=d.ingredients||[];
+    if(ings.length){
+      this.$('ingredients').innerHTML=ings.map(i=>`<div class="ing"><div class="ing-dot ${i.level||'low'}"></div><div class="ing-name">${i.name||'İçerik'}${i.code?`<span class="ing-code">${i.code}</span>`:''}</div>${i.risk!==undefined?`<div class="ing-risk" style="color:var(--${(i.level||'low')==='high'?'danger':(i.level||'low')==='medium'?'warning':'success'})">${i.risk}%</div>`:''}</div>`).join('');
+    }else{
+      this.$('ingredients').innerHTML='<div class="ing"><div class="ing-dot low"></div><div class="ing-name">İçerik bilgisi bulunamadı</div></div>';
+    }
+    
+    // Favorites
+    const isFav=this.favorites.some(f=>f.product===d.product);
+    this.$('favBtn').textContent=isFav?'❤️':'🤍';
+    this.$('favBtn').classList.toggle('active',isFav);
+    
+    this.$('results').classList.add('show');
+    this.$('results').scrollIntoView({behavior:'smooth'});
   },
-  setLevel(id,v){const el=this.$(id);const str=String(v||'-');el.textContent=str;el.className='value '+(str.includes('Düşük')?'success':str.includes('Orta')?'warning':'danger')},
-  addToHistory(d){this.history.unshift({id:Date.now(),date:new Date().toLocaleDateString('tr-TR'),product:d.product,brand:d.brand,score:d.healthScore,barcode:d.barcode});if(this.history.length>50)this.history.pop();localStorage.setItem('gx_history',JSON.stringify(this.history))},
-  renderHistory(){if(!this.history.length){this.$('historyList').innerHTML='';this.$('emptyHistory').style.display='block';return}this.$('emptyHistory').style.display='none';this.$('historyList').innerHTML=this.history.map(h=>{const color=h.score>=70?'var(--success)':h.score>=40?'var(--warning)':'var(--danger)';return`<div class="list-item" onclick="App.reanalyze('${h.barcode||''}')"><div class="thumb">📦</div><div class="info"><div class="name">${h.product}</div><div class="meta">${h.brand} • ${h.date}</div></div><div class="score" style="color:${color}">${h.score}</div></div>`}).join('')},
+  setLevel(id,v){
+    const el=this.$(id);
+    if(!v||v==='null'||v==='undefined'){el.textContent='—';el.className='value';return;}
+    el.textContent=v;
+    el.className='value '+(v.includes('Düşük')?'success':v.includes('Orta')?'warning':'danger');
+  },
+  addToHistory(d){this.history.unshift({id:Date.now(),date:new Date().toLocaleDateString('tr-TR'),product:d.product||'Ürün',brand:d.brand||'',score:d.healthScore||50,barcode:d.barcode||this.barcode});if(this.history.length>50)this.history.pop();localStorage.setItem('gx_history',JSON.stringify(this.history))},
+  renderHistory(){if(!this.history.length){this.$('historyList').innerHTML='';this.$('emptyHistory').style.display='block';return}this.$('emptyHistory').style.display='none';this.$('historyList').innerHTML=this.history.map(h=>{const color=h.score>=70?'var(--success)':h.score>=40?'var(--warning)':'var(--danger)';return`<div class="list-item" onclick="App.reanalyze('${h.barcode||''}')"><div class="thumb">📦</div><div class="info"><div class="name">${h.product}</div><div class="meta">${h.brand||''}${h.brand?' • ':''}${h.date}</div></div><div class="score" style="color:${color}">${h.score}</div></div>`}).join('')},
   clearHistory(){if(confirm('Geçmişi silmek istediğinize emin misiniz?')){this.history=[];localStorage.setItem('gx_history','[]');this.renderHistory();this.toast('Geçmiş temizlendi')}},
   reanalyze(barcode){if(barcode){this.barcode=barcode;this.openScanner();this.analyzeBarcode()}},
-  toggleFav(){if(!this.currentResult)return;const idx=this.favorites.findIndex(f=>f.product===this.currentResult.product);if(idx>-1){this.favorites.splice(idx,1);this.$('favBtn').textContent='🤍';this.$('favBtn').classList.remove('active');this.toast('Favorilerden çıkarıldı')}else{this.favorites.unshift({id:Date.now(),product:this.currentResult.product,brand:this.currentResult.brand,score:this.currentResult.healthScore,barcode:this.currentResult.barcode});this.$('favBtn').textContent='❤️';this.$('favBtn').classList.add('active');this.toast('Favorilere eklendi')}localStorage.setItem('gx_favorites',JSON.stringify(this.favorites))},
-  renderFavorites(){this.$('favCount').textContent=this.favorites.length+' ürün';if(!this.favorites.length){this.$('favList').innerHTML='';this.$('emptyFav').style.display='block';return}this.$('emptyFav').style.display='none';this.$('favList').innerHTML=this.favorites.map(f=>{const color=f.score>=70?'var(--success)':f.score>=40?'var(--warning)':'var(--danger)';return`<div class="list-item"><div class="thumb">📦</div><div class="info"><div class="name">${f.product}</div><div class="meta">${f.brand}</div></div><div class="score" style="color:${color}">${f.score}</div></div>`}).join('')},
+  toggleFav(){if(!this.currentResult)return;const idx=this.favorites.findIndex(f=>f.product===this.currentResult.product);if(idx>-1){this.favorites.splice(idx,1);this.$('favBtn').textContent='🤍';this.$('favBtn').classList.remove('active');this.toast('Favorilerden çıkarıldı')}else{this.favorites.unshift({id:Date.now(),product:this.currentResult.product,brand:this.currentResult.brand,score:this.currentResult.healthScore,barcode:this.currentResult.barcode||this.barcode});this.$('favBtn').textContent='❤️';this.$('favBtn').classList.add('active');this.toast('Favorilere eklendi')}localStorage.setItem('gx_favorites',JSON.stringify(this.favorites))},
+  renderFavorites(){this.$('favCount').textContent=this.favorites.length+' ürün';if(!this.favorites.length){this.$('favList').innerHTML='';this.$('emptyFav').style.display='block';return}this.$('emptyFav').style.display='none';this.$('favList').innerHTML=this.favorites.map(f=>{const color=(f.score||50)>=70?'var(--success)':(f.score||50)>=40?'var(--warning)':'var(--danger)';return`<div class="list-item"><div class="thumb">📦</div><div class="info"><div class="name">${f.product||'Ürün'}</div><div class="meta">${f.brand||''}</div></div><div class="score" style="color:${color}">${f.score||50}</div></div>`}).join('')},
   openModal(){this.loadProfileToModal();this.$('profileModal').classList.add('show')},
   closeModal(){this.$('profileModal').classList.remove('show')},
   loadProfileToModal(){document.querySelectorAll('#modalDiseases .option').forEach(o=>{o.classList.toggle('selected',this.profile.diseases?.includes(o.dataset.v))});document.querySelectorAll('#modalSensitivities .option').forEach(o=>{o.classList.toggle('selected',this.profile.sensitivities?.includes(o.dataset.v))})},
   saveProfile(){this.profile.diseases=[...document.querySelectorAll('#modalDiseases .option.selected')].map(o=>o.dataset.v);this.profile.sensitivities=[...document.querySelectorAll('#modalSensitivities .option.selected')].map(o=>o.dataset.v);localStorage.setItem('gx_profile',JSON.stringify(this.profile));this.closeModal();this.toast('Profil kaydedildi')},
-  share(){if(!this.currentResult)return;const text=`🔬 GidaX\n${this.currentResult.brand} - ${this.currentResult.product}\nSkor: ${this.currentResult.healthScore}/100`;if(navigator.share){navigator.share({title:'GidaX',text})}else{navigator.clipboard.writeText(text);this.toast('Kopyalandı')}},
+  share(){if(!this.currentResult)return;const text=`🔬 GidaX\n${this.currentResult.brand||''} - ${this.currentResult.product||'Ürün'}\nSkor: ${this.currentResult.healthScore||50}/100`;if(navigator.share){navigator.share({title:'GidaX',text})}else{navigator.clipboard.writeText(text);this.toast('Kopyalandı')}},
   toast(msg){const t=this.$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 };
 document.addEventListener('DOMContentLoaded',()=>App.init());
