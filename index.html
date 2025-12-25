@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Yapay zeka destekli gıda analiz uygulaması. Ürünleri tarayın, sağlık skorunu öğrenin.">
+    <title>GidaX - Akıllı Gıda Analizi</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html{scroll-behavior:smooth}
+        body{font-family:'Plus Jakarta Sans',sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;min-height:100dvh;overscroll-behavior:none}
+        .container{max-width:500px;margin:0 auto;padding:20px;padding-bottom:100px}
+        
+        /* Header */
+        .header{text-align:center;margin-bottom:24px;position:relative}
+        .logo{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .tagline{color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:4px}
+        .header-buttons{position:absolute;top:0;right:0;display:flex;gap:8px}
+        .icon-btn{background:rgba(255,255,255,0.1);border:none;border-radius:12px;padding:10px;cursor:pointer;color:#fff;font-size:1.1rem;transition:all 0.2s;position:relative}
+        .icon-btn:hover,.icon-btn:active{background:rgba(255,255,255,0.2);transform:scale(0.95)}
+        .profile-badge{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#10b981;border-radius:50%;display:none}
+        .icon-btn.has-profile .profile-badge{display:block}
+        
+        /* Install Banner */
+        .install-banner{background:linear-gradient(135deg,rgba(102,126,234,0.2),rgba(118,75,162,0.2));border:1px solid rgba(102,126,234,0.3);border-radius:16px;padding:14px;margin-bottom:20px;display:none;align-items:center;gap:12px}
+        .install-banner.show{display:flex}
+        .install-banner-icon{font-size:2rem}
+        .install-banner-text{flex:1}
+        .install-banner-title{font-weight:700;font-size:0.9rem}
+        .install-banner-desc{font-size:0.75rem;color:rgba(255,255,255,0.6)}
+        .install-btn{background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:10px;padding:10px 16px;color:#fff;font-weight:600;font-size:0.8rem;cursor:pointer}
+        .install-close{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.2rem;cursor:pointer;padding:4px}
+        
+        /* Bottom Navigation */
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,0.95);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-around;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:100}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;color:rgba(255,255,255,0.5);font-size:0.65rem;cursor:pointer;transition:all 0.2s;border:none;background:none}
+        .nav-item.active{color:#667eea}
+        .nav-item .nav-icon{font-size:1.4rem}
+        .nav-item.scan-btn{margin-top:-20px}
+        .nav-item.scan-btn .nav-icon{width:56px;height:56px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 20px rgba(102,126,234,0.4)}
+        
+        /* Tabs */
+        .tab-buttons{display:flex;gap:8px;margin-bottom:20px}
+        .tab-btn{flex:1;padding:14px 8px;background:rgba(255,255,255,0.05);border:2px solid transparent;border-radius:16px;color:rgba(255,255,255,0.6);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .tab-btn:hover{background:rgba(255,255,255,0.1)}
+        .tab-btn.active{background:rgba(102,126,234,0.15);border-color:rgba(102,126,234,0.5);color:#fff}
+        .tab-btn .icon{font-size:1.3rem}
+        
+        /* Pages */
+        .page{display:none}.page.active{display:block}
+        
+        /* Upload Area */
+        .upload-area{border:2px dashed rgba(255,255,255,0.2);border-radius:20px;padding:40px 20px;text-align:center;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.3s}
+        .upload-area:hover,.upload-area:active{border-color:rgba(102,126,234,0.5);background:rgba(102,126,234,0.05)}
+        .upload-area.has-image{padding:0;border-style:solid}
+        .upload-icon{font-size:40px;margin-bottom:12px}
+        .upload-text{color:rgba(255,255,255,0.6);font-size:0.9rem}
+        .preview-img{width:100%;height:200px;object-fit:cover;border-radius:18px;display:none}
+        .upload-area.has-image .preview-img{display:block}
+        .upload-area.has-image .upload-content{display:none}
+        input[type="file"]{display:none}
+        
+        /* Barcode Scanner */
+        .scanner-container{position:relative;border-radius:20px;overflow:hidden;background:#000;margin-bottom:16px}
+        #barcode-reader{width:100%;min-height:280px}
+        #barcode-reader video{border-radius:20px}
+        .scanner-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid #667eea;border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5);pointer-events:none}
+        .scanner-overlay::before,.scanner-overlay::after{content:'';position:absolute;width:30px;height:30px;border:4px solid #667eea}
+        .scanner-overlay::before{top:-4px;left:-4px;border-right:none;border-bottom:none;border-radius:12px 0 0 0}
+        .scanner-overlay::after{bottom:-4px;right:-4px;border-left:none;border-top:none;border-radius:0 0 12px 0}
+        .scanner-hint{text-align:center;color:rgba(255,255,255,0.6);font-size:0.8rem;margin-top:12px}
+        .scanner-controls{display:flex;gap:8px;margin-top:12px}
+        .scanner-btn{flex:1;padding:12px;background:rgba(255,255,255,0.1);border:none;border-radius:12px;color:#fff;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+        .scanner-btn.primary{background:linear-gradient(135deg,#667eea,#764ba2)}
+        
+        /* Divider */
+        .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:rgba(255,255,255,0.4);font-size:0.8rem}
+        .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1)}
+        
+        /* Barcode Input */
+        .barcode-input{display:flex;gap:8px}
+        .barcode-input input{flex:1;padding:14px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:1rem}
+        .barcode-input input::placeholder{color:rgba(255,255,255,0.4)}
+        .barcode-input input:focus{outline:none;border-color:rgba(102,126,234,0.5)}
+        .barcode-input button{padding:14px 20px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:12px;color:#fff;font-weight:600;cursor:pointer}
+        
+        /* Compare */
+        .compare-wrapper{position:relative}
+        .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .compare-box{border:2px dashed rgba(255,255,255,0.2);border-radius:16px;padding:24px 12px;text-align:center;cursor:pointer;transition:all 0.2s;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .compare-box:hover,.compare-box:active{border-color:rgba(102,126,234,0.5)}
+        .compare-box.filled{border-style:solid;padding:8px}
+        .compare-box .cicon{font-size:2rem;margin-bottom:8px}
+        .compare-box .label{font-size:0.8rem;color:rgba(255,255,255,0.6)}
+        .compare-box img{width:100%;height:100px;object-fit:cover;border-radius:12px}
+        .compare-box .name{font-size:0.85rem;font-weight:600;margin-top:8px}
+        .vs-badge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#764ba2;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;z-index:1}
+        
+        /* Buttons */
+        .btn{width:100%;margin-top:16px;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s}
+        .btn:disabled{opacity:0.5;cursor:not-allowed}
+        .btn:not(:disabled):active{transform:scale(0.98)}
+        .btn.loading .btn-text{display:none}
+        .btn.loading .spinner{display:block}
+        .btn.secondary{background:rgba(255,255,255,0.1)}
+        .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:none}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        
+        /* Error & Toast */
+        .error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;padding:14px;border-radius:12px;margin-top:12px;display:none;font-size:0.9rem}
+        .error.show{display:block}
+        .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a24;border:1px solid rgba(255,255,255,0.1);padding:14px 24px;border-radius:14px;font-size:0.9rem;z-index:200;opacity:0;transition:all 0.3s;display:flex;align-items:center;gap:10px}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast.success{border-color:rgba(16,185,129,0.3)}
+        .toast.error{border-color:rgba(239,68,68,0.3)}
+
+        /* Onboarding */
+        .onboarding{position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0a0f;z-index:200;display:none;flex-direction:column}
+        .onboarding.show{display:flex}
+        .onboarding-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;max-width:400px;margin:0 auto;width:100%}
+        .onboarding-step{display:none;width:100%;text-align:center;animation:fadeIn 0.3s}
+        .onboarding-step.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .onboarding-icon{font-size:4rem;margin-bottom:20px}
+        .onboarding-title{font-size:1.5rem;font-weight:800;margin-bottom:8px}
+        .onboarding-subtitle{color:rgba(255,255,255,0.6);font-size:0.9rem;margin-bottom:24px;line-height:1.5}
+        .onboarding-input{width:100%;padding:16px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);border-radius:14px;color:#fff;font-size:1.1rem;text-align:center;margin-bottom:20px}
+        .onboarding-input:focus{outline:none;border-color:rgba(102,126,234,0.5)}
+        .onboarding-input::placeholder{color:rgba(255,255,255,0.4)}
+        .onboarding-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;text-align:left}
+        .onboarding-option{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);padding:14px;border-radius:12px;cursor:pointer;transition:all 0.2s;border:2px solid transparent}
+        .onboarding-option:hover{background:rgba(255,255,255,0.08)}
+        .onboarding-option.selected{background:rgba(102,126,234,0.15);border-color:rgba(102,126,234,0.5)}
+        .onboarding-option .oicon{font-size:1.3rem}
+        .onboarding-option .olabel{font-size:0.85rem;font-weight:500}
+        .onboarding-btn{width:100%;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:auto}
+        .onboarding-btn:disabled{opacity:0.5}
+        .onboarding-skip{background:none;border:none;color:rgba(255,255,255,0.5);font-size:0.85rem;cursor:pointer;margin-top:16px;padding:10px}
+        .onboarding-skip:hover{color:#fff}
+        .onboarding-progress{display:flex;gap:8px;justify-content:center;margin-bottom:32px}
+        .progress-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.3s}
+        .progress-dot.active{background:linear-gradient(135deg,#667eea,#764ba2);transform:scale(1.2)}
+        .progress-dot.done{background:#10b981}
+        .welcome-logo{font-size:3rem;font-weight:800;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        
+        /* Modal */
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:150;display:none;align-items:flex-end;justify-content:center;padding:0}
+        .modal-overlay.show{display:flex}
+        .modal-overlay.center{align-items:center;padding:16px}
+        .modal{background:#1a1a24;border-radius:24px 24px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s}
+        .modal-overlay.center .modal{border-radius:20px}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal-header{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#1a1a24;z-index:1}
+        .modal-title{font-size:1.1rem;font-weight:700}
+        .modal-close{background:none;border:none;color:rgba(255,255,255,0.6);font-size:1.5rem;cursor:pointer;padding:4px 8px}
+        .modal-body{padding:20px}
+        .section-label{font-size:0.7rem;font-weight:600;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:10px;margin-top:16px}
+        .section-label:first-child{margin-top:0}
+        .checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .checkbox-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s;border:2px solid transparent;font-size:0.8rem}
+        .checkbox-item:hover{background:rgba(255,255,255,0.08)}
+        .checkbox-item.selected{background:rgba(102,126,234,0.15);border-color:rgba(102,126,234,0.5)}
+        .checkbox-item input{display:none}
+        .save-btn{width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:12px;color:#fff;font-size:0.95rem;font-weight:600;cursor:pointer}
+        
+        /* Results Card */
+        .results{margin-top:24px;display:none}.results.show{display:block}
+        .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:20px;margin-bottom:16px}
+        
+        /* Personal Alert */
+        .personal-alert{border-radius:14px;padding:14px;margin-bottom:16px;display:none}
+        .personal-alert.show{display:block}
+        .personal-alert.danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)}
+        .personal-alert.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)}
+        .personal-alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3)}
+        .personal-alert-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:0.95rem}
+        .personal-alert-title.danger{color:#ef4444}
+        .personal-alert-title.warning{color:#f59e0b}
+        .personal-alert-title.success{color:#10b981}
+        .personal-alert-text{font-size:0.85rem;color:rgba(255,255,255,0.8);margin-top:6px}
+        
+        /* Alternatives */
+        .alternatives{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:16px;margin-bottom:16px;display:none}
+        .alternatives.show{display:block}
+        .alternatives-title{font-weight:700;color:#10b981;margin-bottom:12px;font-size:0.9rem}
+        .alt-item{display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.05);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+        .alt-item:hover{background:rgba(255,255,255,0.08)}
+        .alt-item:last-child{margin-bottom:0}
+        .alt-img{width:40px;height:40px;border-radius:8px;background:#2a2a3a;display:flex;align-items:center;justify-content:center}
+        .alt-info{flex:1}.alt-name{font-size:0.85rem;font-weight:600}.alt-brand{font-size:0.75rem;color:rgba(255,255,255,0.5)}
+        .alt-score{font-weight:700;color:#10b981}
+
+        /* Source Badge */
+        .source-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:16px;font-size:0.7rem;font-weight:600;margin-bottom:12px}
+        .source-badge.verified{background:rgba(16,185,129,0.15);color:#10b981}
+        .source-badge.ai{background:rgba(245,158,11,0.15);color:#f59e0b}
+        
+        /* Product Header */
+        .product-header{display:flex;gap:14px;margin-bottom:16px}
+        .product-img{width:70px;height:70px;border-radius:14px;object-fit:cover;background:#2a2a3a}
+        .product-info{flex:1}
+        .brand{color:#8b5cf6;font-size:0.7rem;font-weight:600;text-transform:uppercase}
+        .name{font-size:1.1rem;font-weight:700;margin:2px 0}
+        .category{color:rgba(255,255,255,0.6);font-size:0.8rem}
+        .fav-btn{background:none;border:none;font-size:1.5rem;cursor:pointer;padding:8px;opacity:0.5;transition:all 0.2s}
+        .fav-btn.active{opacity:1}
+        .fav-btn:active{transform:scale(1.2)}
+        
+        /* Scores */
+        .scores-row{display:flex;gap:10px;margin-bottom:16px}
+        .score-box{flex:1;background:linear-gradient(135deg,rgba(102,126,234,0.1),rgba(118,75,162,0.1));border-radius:16px;padding:16px;text-align:center}
+        .score-label{font-size:0.65rem;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:6px}
+        .score-value{font-size:2rem;font-weight:800}
+        .score-value.low{color:#ef4444}.score-value.medium{color:#f59e0b}.score-value.high{color:#10b981}
+        .score-max{font-size:0.8rem;color:rgba(255,255,255,0.4)}
+        .nutri-score{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:#fff;margin:0 auto}
+        .nutri-a{background:#038141}.nutri-b{background:#85bb2f}.nutri-c{background:#fecb02;color:#000}.nutri-d{background:#ee8100}.nutri-e{background:#e63e11}
+        .status{display:inline-block;padding:4px 12px;border-radius:16px;font-size:0.7rem;font-weight:600;margin-top:6px}
+        .status.low{background:rgba(239,68,68,0.2);color:#ef4444}
+        .status.medium{background:rgba(245,158,11,0.2);color:#f59e0b}
+        .status.high{background:rgba(16,185,129,0.2);color:#10b981}
+        
+        /* Grid Items */
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+        .grid-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;text-align:center}
+        .grid-icon{font-size:1.3rem;margin-bottom:6px}
+        .grid-value{font-size:0.9rem;font-weight:700}
+        .grid-value.danger{color:#ef4444}.grid-value.warning{color:#f59e0b}.grid-value.success{color:#10b981}
+        .grid-label{color:rgba(255,255,255,0.6);font-size:0.7rem;margin-top:2px}
+        
+        /* Warnings */
+        .warnings{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:14px;margin-bottom:16px;display:none}
+        .warnings.show{display:block}
+        .warnings-title{display:flex;align-items:center;gap:8px;font-weight:600;color:#ef4444;margin-bottom:10px;font-size:0.85rem}
+        .warnings-list{list-style:none}
+        .warnings-list li{padding-left:16px;margin-bottom:6px;color:rgba(255,255,255,0.7);font-size:0.8rem;position:relative}
+        .warnings-list li::before{content:'•';position:absolute;left:0;color:#ef4444}
+        
+        /* Sensitivity Alerts */
+        .sensitivity-alerts{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+        .sens-alert{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;animation:fadeIn 0.3s}
+        .sens-alert.danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)}
+        .sens-alert.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)}
+        .sens-alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3)}
+        .sens-icon{font-size:1.8rem}
+        .sens-content{flex:1}
+        .sens-title{font-weight:700;font-size:0.9rem}
+        .sens-alert.danger .sens-title{color:#ef4444}
+        .sens-alert.warning .sens-title{color:#f59e0b}
+        .sens-alert.success .sens-title{color:#10b981}
+        .sens-message{font-size:0.8rem;color:rgba(255,255,255,0.7);margin-top:2px}
+        
+        /* Ingredients */
+        .section-title{font-size:0.8rem;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:12px}
+        .ingredient{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+        .ingredient:last-child{border-bottom:none}
+        .risk-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem}
+        .risk-icon.high{background:rgba(239,68,68,0.15)}.risk-icon.medium{background:rgba(245,158,11,0.15)}.risk-icon.low{background:rgba(16,185,129,0.15)}
+        .ing-details{flex:1}.ing-name{font-weight:600;font-size:0.85rem}
+        .ing-name .code{font-size:0.65rem;background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:4px;margin-left:4px}
+        .ing-desc{color:rgba(255,255,255,0.6);font-size:0.75rem;margin-top:2px}
+        .ing-risk{text-align:right}
+        .risk-pct{font-weight:700;font-size:0.85rem}
+        .risk-pct.high{color:#ef4444}.risk-pct.medium{color:#f59e0b}.risk-pct.low{color:#10b981}
+        .risk-bar{width:40px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:3px;overflow:hidden}
+        .risk-fill{height:100%;border-radius:2px}
+        .risk-fill.high{background:#ef4444}.risk-fill.medium{background:#f59e0b}.risk-fill.low{background:#10b981}
+
+        /* Compare Results */
+        .compare-results{display:none;margin-top:24px}.compare-results.show{display:block}
+        .compare-header{text-align:center;margin-bottom:16px}
+        .compare-header h3{font-size:1rem;margin-bottom:4px}
+        .compare-header p{color:rgba(255,255,255,0.6);font-size:0.85rem}
+        .winner-badge{background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.8rem;font-weight:600;display:inline-block;margin-bottom:16px}
+        .compare-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .compare-card{background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px;text-align:center}
+        .compare-card.winner{border-color:rgba(16,185,129,0.5);background:rgba(16,185,129,0.05)}
+        .compare-card.loser{opacity:0.7}
+        .compare-card img{width:60px;height:60px;border-radius:10px;object-fit:cover;margin-bottom:8px}
+        .compare-card .name{font-size:0.85rem;font-weight:600;margin-bottom:4px}
+        .compare-card .brand{font-size:0.7rem;color:rgba(255,255,255,0.5)}
+        .compare-card .score{font-size:1.8rem;font-weight:800;margin:8px 0}
+        .compare-stat{display:flex;justify-content:space-between;font-size:0.75rem;padding:6px 0;border-top:1px solid rgba(255,255,255,0.08)}
+        .compare-stat .label{color:rgba(255,255,255,0.6)}
+        .compare-stat .better{color:#10b981;font-weight:600}
+        .compare-stat .worse{color:#ef4444;font-weight:600}
+        
+        /* History & Favorites */
+        .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .list-header h2{font-size:1.2rem;font-weight:700}
+        .list-header button{background:none;border:none;color:#ef4444;font-size:0.8rem;cursor:pointer}
+        .filter-tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:8px}
+        .filter-tab{padding:8px 16px;background:rgba(255,255,255,0.05);border:none;border-radius:20px;color:rgba(255,255,255,0.6);font-size:0.8rem;white-space:nowrap;cursor:pointer}
+        .filter-tab.active{background:rgba(102,126,234,0.2);color:#fff}
+        .history-item,.fav-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:14px;margin-bottom:8px;position:relative;overflow:hidden}
+        .history-item.swiping,.fav-item.swiping{transition:transform 0.2s}
+        .history-img,.fav-img{width:50px;height:50px;border-radius:10px;background:#2a2a3a;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+        .history-info,.fav-info{flex:1;min-width:0}
+        .history-name,.fav-name{font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .history-brand,.fav-brand{font-size:0.75rem;color:rgba(255,255,255,0.5)}
+        .history-date{font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px}
+        .history-score,.fav-score{font-weight:700;font-size:1.1rem;min-width:40px;text-align:right}
+        .delete-bg{position:absolute;right:0;top:0;bottom:0;width:80px;background:#ef4444;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem}
+        .empty-state{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.5)}
+        .empty-state .empty-icon{font-size:3rem;margin-bottom:12px;opacity:0.5}
+        .empty-state p{font-size:0.9rem}
+        
+        /* Profile Page */
+        .profile-header{text-align:center;padding:20px 0;margin-bottom:20px}
+        .profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 12px}
+        .profile-name{font-size:1.2rem;font-weight:700}
+        .profile-subtitle{color:rgba(255,255,255,0.5);font-size:0.85rem}
+        .stats-row{display:flex;justify-content:center;gap:24px;margin-top:16px}
+        .stat-item{text-align:center}
+        .stat-value{font-size:1.5rem;font-weight:800}
+        .stat-label{font-size:0.7rem;color:rgba(255,255,255,0.5)}
+        .profile-section{background:rgba(255,255,255,0.03);border-radius:16px;padding:16px;margin-bottom:16px}
+        .profile-section-title{display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:12px;font-size:0.9rem}
+        .profile-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
+        .profile-row:last-child{border-bottom:none}
+        .profile-row-label{color:rgba(255,255,255,0.7);font-size:0.9rem}
+        .profile-row-value{color:rgba(255,255,255,0.5);font-size:0.85rem}
+        .toggle{width:48px;height:28px;background:rgba(255,255,255,0.2);border-radius:14px;position:relative;cursor:pointer;transition:all 0.3s}
+        .toggle.active{background:linear-gradient(135deg,#667eea,#764ba2)}
+        .toggle::after{content:'';position:absolute;width:24px;height:24px;background:#fff;border-radius:50%;top:2px;left:2px;transition:all 0.3s}
+        .toggle.active::after{left:22px}
+        .profile-tags{display:flex;flex-wrap:wrap;gap:6px}
+        .profile-tag{padding:4px 10px;background:rgba(102,126,234,0.2);border-radius:12px;font-size:0.75rem;color:#a5b4fc}
+        
+        /* Share Modal */
+        .share-options{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+        .share-option{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 8px;background:rgba(255,255,255,0.05);border-radius:14px;cursor:pointer;transition:all 0.2s;border:none;color:#fff}
+        .share-option:hover,.share-option:active{background:rgba(255,255,255,0.1)}
+        .share-option .share-icon{font-size:1.8rem}
+        .share-option .share-label{font-size:0.7rem;color:rgba(255,255,255,0.7)}
+        
+        /* Disclaimer */
+        .disclaimer{background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;margin-top:16px;font-size:0.7rem;color:rgba(255,255,255,0.5);text-align:center}
+        
+        /* Skeleton Loading */
+        .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.05) 25%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.05) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        .skeleton-text{height:16px;margin-bottom:8px}
+        .skeleton-title{height:24px;width:60%;margin-bottom:12px}
+        .skeleton-img{width:70px;height:70px;border-radius:14px}
+        .skeleton-score{width:80px;height:80px;border-radius:16px;margin:0 auto}
+    </style>
+</head>
+<body>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+        <div class="install-banner-icon">📲</div>
+        <div class="install-banner-text">
+            <div class="install-banner-title">GidaX'ı Yükle</div>
+            <div class="install-banner-desc">Ana ekrana ekle, daha hızlı eriş</div>
+        </div>
+        <button class="install-btn" id="installBtn">Yükle</button>
+        <button class="install-close" id="installClose">&times;</button>
+    </div>
+
+    <!-- Onboarding -->
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-content">
+            <div class="onboarding-progress">
+                <div class="progress-dot active" data-step="0"></div>
+                <div class="progress-dot" data-step="1"></div>
+                <div class="progress-dot" data-step="2"></div>
+                <div class="progress-dot" data-step="3"></div>
+                <div class="progress-dot" data-step="4"></div>
+            </div>
+            
+            <div class="onboarding-step active" data-step="0">
+                <div class="onboarding-icon">🔬</div>
+                <div class="welcome-logo">GidaX</div>
+                <div class="onboarding-title">Akıllı Gıda Analizi</div>
+                <div class="onboarding-subtitle">Yediğiniz gıdaları tarayın, sağlık skorunu öğrenin, size özel uyarılar alın.</div>
+                <button class="onboarding-btn" onclick="GidaX.nextStep()">Başlayalım 🚀</button>
+            </div>
+            
+            <div class="onboarding-step" data-step="1">
+                <div class="onboarding-icon">👋</div>
+                <div class="onboarding-title">Merhaba!</div>
+                <div class="onboarding-subtitle">Size nasıl hitap edelim?</div>
+                <input type="text" class="onboarding-input" id="userName" placeholder="Adınız...">
+                <button class="onboarding-btn" onclick="GidaX.nextStep()">Devam →</button>
+                <button class="onboarding-skip" onclick="GidaX.nextStep()">Atla</button>
+            </div>
+            
+            <div class="onboarding-step" data-step="2">
+                <div class="onboarding-icon">🏥</div>
+                <div class="onboarding-title">Sağlık Durumunuz</div>
+                <div class="onboarding-subtitle">Varsa kronik hastalıklarınızı seçin</div>
+                <div class="onboarding-options" id="diseaseOptions">
+                    <div class="onboarding-option" data-v="diyabet"><span class="oicon">🩸</span><span class="olabel">Diyabet</span></div>
+                    <div class="onboarding-option" data-v="hipertansiyon"><span class="oicon">💓</span><span class="olabel">Tansiyon</span></div>
+                    <div class="onboarding-option" data-v="kolesterol"><span class="oicon">🫀</span><span class="olabel">Kolesterol</span></div>
+                    <div class="onboarding-option" data-v="kalp"><span class="oicon">❤️</span><span class="olabel">Kalp</span></div>
+                    <div class="onboarding-option" data-v="bobrek"><span class="oicon">🫘</span><span class="olabel">Böbrek</span></div>
+                    <div class="onboarding-option" data-v="gut"><span class="oicon">🦶</span><span class="olabel">Gut</span></div>
+                    <div class="onboarding-option" data-v="obezite"><span class="oicon">⚖️</span><span class="olabel">Obezite</span></div>
+                    <div class="onboarding-option" data-v="karaciger"><span class="oicon">🫁</span><span class="olabel">Karaciğer</span></div>
+                </div>
+                <button class="onboarding-btn" onclick="GidaX.nextStep()">Devam →</button>
+                <button class="onboarding-skip" onclick="GidaX.nextStep()">Hastalığım yok, atla</button>
+            </div>
+            
+            <div class="onboarding-step" data-step="3">
+                <div class="onboarding-icon">🚫</div>
+                <div class="onboarding-title">Alerjileriniz</div>
+                <div class="onboarding-subtitle">Dikkat etmeniz gereken alerjenleri seçin</div>
+                <div class="onboarding-options" id="allergyOptions">
+                    <div class="onboarding-option" data-v="gluten"><span class="oicon">🌾</span><span class="olabel">Gluten</span></div>
+                    <div class="onboarding-option" data-v="laktoz"><span class="oicon">🥛</span><span class="olabel">Laktoz</span></div>
+                    <div class="onboarding-option" data-v="fistik"><span class="oicon">🥜</span><span class="olabel">Fıstık/Fındık</span></div>
+                    <div class="onboarding-option" data-v="yumurta"><span class="oicon">🥚</span><span class="olabel">Yumurta</span></div>
+                    <div class="onboarding-option" data-v="denizurunleri"><span class="oicon">🦐</span><span class="olabel">Deniz Ürünü</span></div>
+                    <div class="onboarding-option" data-v="soya"><span class="oicon">🫘</span><span class="olabel">Soya</span></div>
+                </div>
+                <button class="onboarding-btn" onclick="GidaX.nextStep()">Devam →</button>
+                <button class="onboarding-skip" onclick="GidaX.nextStep()">Alerjim yok, atla</button>
+            </div>
+            
+            <div class="onboarding-step" data-step="4">
+                <div class="onboarding-icon">⚡</div>
+                <div class="onboarding-title">Hassasiyetleriniz</div>
+                <div class="onboarding-subtitle">Dikkat ettiğiniz konuları seçin</div>
+                <div class="onboarding-options" id="sensitivityOptions">
+                    <div class="onboarding-option" data-v="helal"><span class="oicon">☪️</span><span class="olabel">Helal</span></div>
+                    <div class="onboarding-option" data-v="boykot"><span class="oicon">✊</span><span class="olabel">Boykot</span></div>
+                    <div class="onboarding-option" data-v="vegan"><span class="oicon">🌱</span><span class="olabel">Vegan</span></div>
+                    <div class="onboarding-option" data-v="vejetaryen"><span class="oicon">🥗</span><span class="olabel">Vejetaryen</span></div>
+                    <div class="onboarding-option" data-v="yerli"><span class="oicon">🇹🇷</span><span class="olabel">Yerli Üretim</span></div>
+                    <div class="onboarding-option" data-v="organik"><span class="oicon">🍃</span><span class="olabel">Organik</span></div>
+                </div>
+                <button class="onboarding-btn" onclick="GidaX.finishOnboarding()">Tamamla ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay center" id="profileModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">👤 Sağlık Profilim</span>
+                <button class="modal-close" onclick="GidaX.closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="section-label">İsim</div>
+                <input type="text" class="onboarding-input" id="profileName" placeholder="Adınız..." style="margin-bottom:12px;text-align:left;font-size:0.95rem">
+                
+                <div class="section-label">🏥 Hastalıklarım</div>
+                <div class="checkbox-grid" id="profileDiseases">
+                    <label class="checkbox-item" data-v="diyabet"><input type="checkbox"><span>🩸 Diyabet</span></label>
+                    <label class="checkbox-item" data-v="hipertansiyon"><input type="checkbox"><span>💓 Tansiyon</span></label>
+                    <label class="checkbox-item" data-v="kolesterol"><input type="checkbox"><span>🫀 Kolesterol</span></label>
+                    <label class="checkbox-item" data-v="kalp"><input type="checkbox"><span>❤️ Kalp</span></label>
+                    <label class="checkbox-item" data-v="bobrek"><input type="checkbox"><span>🫘 Böbrek</span></label>
+                    <label class="checkbox-item" data-v="gut"><input type="checkbox"><span>🦶 Gut</span></label>
+                    <label class="checkbox-item" data-v="obezite"><input type="checkbox"><span>⚖️ Obezite</span></label>
+                    <label class="checkbox-item" data-v="karaciger"><input type="checkbox"><span>🫁 Karaciğer</span></label>
+                </div>
+                
+                <div class="section-label">🚫 Alerjilerim</div>
+                <div class="checkbox-grid" id="profileAllergies">
+                    <label class="checkbox-item" data-v="gluten"><input type="checkbox"><span>🌾 Gluten</span></label>
+                    <label class="checkbox-item" data-v="laktoz"><input type="checkbox"><span>🥛 Laktoz</span></label>
+                    <label class="checkbox-item" data-v="fistik"><input type="checkbox"><span>🥜 Fıstık</span></label>
+                    <label class="checkbox-item" data-v="yumurta"><input type="checkbox"><span>🥚 Yumurta</span></label>
+                    <label class="checkbox-item" data-v="denizurunleri"><input type="checkbox"><span>🦐 Deniz Ürünü</span></label>
+                    <label class="checkbox-item" data-v="soya"><input type="checkbox"><span>🫘 Soya</span></label>
+                </div>
+                
+                <div class="section-label">⚡ Hassasiyetlerim</div>
+                <div class="checkbox-grid" id="profileSensitivities">
+                    <label class="checkbox-item" data-v="helal"><input type="checkbox"><span>☪️ Helal</span></label>
+                    <label class="checkbox-item" data-v="boykot"><input type="checkbox"><span>✊ Boykot</span></label>
+                    <label class="checkbox-item" data-v="vegan"><input type="checkbox"><span>🌱 Vegan</span></label>
+                    <label class="checkbox-item" data-v="vejetaryen"><input type="checkbox"><span>🥗 Vejetaryen</span></label>
+                    <label class="checkbox-item" data-v="yerli"><input type="checkbox"><span>🇹🇷 Yerli</span></label>
+                    <label class="checkbox-item" data-v="organik"><input type="checkbox"><span>🍃 Organik</span></label>
+                </div>
+                
+                <button class="save-btn" onclick="GidaX.saveProfile()">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">📤 Paylaş</span>
+                <button class="modal-close" onclick="GidaX.closeModal('shareModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <button class="share-option" onclick="GidaX.shareVia('whatsapp')">
+                        <span class="share-icon">💬</span>
+                        <span class="share-label">WhatsApp</span>
+                    </button>
+                    <button class="share-option" onclick="GidaX.shareVia('twitter')">
+                        <span class="share-icon">🐦</span>
+                        <span class="share-label">Twitter</span>
+                    </button>
+                    <button class="share-option" onclick="GidaX.shareVia('copy')">
+                        <span class="share-icon">📋</span>
+                        <span class="share-label">Kopyala</span>
+                    </button>
+                    <button class="share-option" onclick="GidaX.shareVia('native')">
+                        <span class="share-icon">📤</span>
+                        <span class="share-label">Diğer</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <header class="header">
+            <div class="header-buttons">
+                <button class="icon-btn" id="profileBtn" onclick="GidaX.openModal('profileModal')">👤<span class="profile-badge"></span></button>
+            </div>
+            <div class="logo">🔬 GidaX</div>
+            <p class="tagline" id="greeting">Akıllı Gıda Analizi</p>
+        </header>

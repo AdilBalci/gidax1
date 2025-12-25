@@ -1,0 +1,9 @@
+{
+  "name": "gidax1",
+  "version": "1.0.0",
+  "description": "AI ile gıda ürün içerik analizi",
+  "private": true,
+  "dependencies": {
+    "openai": "^4.73.0"
+  }
+}
